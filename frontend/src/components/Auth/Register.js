@@ -61,7 +61,7 @@ function Register() {
     if (!isValid) return setErrors(validationErrors);
 
     try {
-      await axios.post("http://0.0.0.0:8000/auth/register", formData);
+      await axios.post(`${process.env.REACT_APP_API_BASE_URL}/auth/register`, formData);
       dispatch(
         register({
           username: formData.username,
