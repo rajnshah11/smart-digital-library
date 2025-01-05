@@ -1,169 +1,192 @@
 import React, { useState } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { logout } from "../redux/authSlice";
+import { useNavigate } from "react-router-dom";
 import {
   AppBar,
-  Toolbar,
-  Typography,
-  Button,
-  IconButton,
-  Drawer,
-  List,
-  ListItem,
-  ListItemText,
-  Divider,
   Box,
+  Toolbar,
+  IconButton,
+  Typography,
+  Menu,
+  Container,
+  Avatar,
+  Tooltip,
+  MenuItem,
 } from "@mui/material";
-import MenuIcon from "@mui/icons-material/Menu";
-import LogoutIcon from "@mui/icons-material/Logout";
+import { ROUTES } from "../constants/routes"; // Import route constants
 
-function Navbar({ username, onLogout }) {
-  const [mobileOpen, setMobileOpen] = useState(false);
+function Navbar() {
+  const { isAuthenticated, username, role } = useSelector(
+    (state) => state.auth
+  );
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
-  // Toggle drawer for mobile
-  const handleDrawerToggle = () => {
-    setMobileOpen(!mobileOpen);
+  const [anchorElUser, setAnchorElUser] = useState(null);
+
+  const handleOpenUserMenu = (event) => {
+    setAnchorElUser(event.currentTarget);
   };
 
-  // Drawer content for mobile
-  const drawer = (
-    <List sx={{ paddingTop: 2 }}>
-      <ListItem>
-        <Typography
-          variant="h5"
-          sx={{
-            fontWeight: "bold",
-            color: "#333", // Dark text color to stand out on light background
-            letterSpacing: "2px",
-          }}
-        >
-          📚 Smart Library
-        </Typography>
-      </ListItem>
-      <Divider sx={{ backgroundColor: "#ccc", marginY: 1 }} />
-      <ListItem>
-        <Typography sx={{ color: "#555", fontSize: "1.1rem" }}>
-        Hi, {username}
-        </Typography>
-      </ListItem>
-      <ListItem
-        button
-        onClick={onLogout}
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          gap: "10px",
-          paddingY: 1,
-          marginY: 1,
-          borderRadius: "10px",
-          "&:hover": {
-            backgroundColor: "#ddd", // Light hover effect for logout button
-          },
-        }}
-      >
-        <LogoutIcon sx={{ color: "#555" }} />
-        <ListItemText
-          primary="Logout"
-          sx={{ color: "#333", fontSize: "1.1rem" }}
-        />
-      </ListItem>
-    </List>
-  );
+  const handleCloseUserMenu = () => {
+    setAnchorElUser(null);
+  };
+
+  const handleLogout = () => {
+    dispatch(logout());
+    navigate(ROUTES.LOGIN); // Use route constant
+    handleCloseUserMenu();
+  };
 
   return (
-    <>
-      {/* AppBar for Desktop */}
-      <AppBar
-        position="sticky"
-        sx={{
-          backgroundColor: "#f5f5f5", // Light grey background for AppBar
-          boxShadow: "0 4px 15px rgba(0, 0, 0, 0.1)", // Light shadow for depth
-          paddingY: 1,
-        }}
-      >
-        <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
-          {/* Library Logo */}
+    <AppBar
+      position="static"
+      sx={{
+        backgroundColor: "#861F41",
+        boxShadow: "0px 4px 10px rgba(0,0,0,0.2)",
+      }}
+    >
+      <Container maxWidth="xl">
+        <Toolbar disableGutters>
+          {/* Application Title */}
           <Typography
             variant="h6"
+            noWrap
+            component="a"
+            href={ROUTES.USER_DASHBOARD} // Use route constant
             sx={{
+              ml: 0, // Remove excess margin on the left
               fontWeight: "bold",
-              color: "#333", // Dark text color for contrast on light background
-              fontSize: "1.5rem",
+              letterSpacing: ".2rem",
+              color: "#FFFFFF", // White text
+              textDecoration: "none",
             }}
           >
-            📚 Smart Library
+            Library System
           </Typography>
 
-          {/* Desktop View */}
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              gap: "20px",
-              color: "#333",
-            }}
-          >
-            {/* Only display username and logout button on Desktop */}
-            <Box sx={{ display: { xs: "none", sm: "flex" } }}>
-              <Typography
-                sx={{
-                  fontSize: "1.1rem",
-                  color: "#333",
-                  marginRight: "15px",
-                  paddingTop:"10px"
+          {/* Spacer to push profile to the right */}
+          <Box sx={{ flexGrow: 1 }} />
+
+          {/* Right-aligned User Menu */}
+          {isAuthenticated ? (
+            <Box sx={{ flexGrow: 0 }}>
+              <Tooltip title="Open settings">
+                <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
+                  <Avatar
+                    alt={username}
+                    sx={{
+                      bgcolor: "#E87722",
+                      color: "#FFFFFF",
+                    }}
+                  >
+                    {username ? username.charAt(0).toUpperCase() : ""}
+                  </Avatar>
+                </IconButton>
+              </Tooltip>
+              <Menu
+                sx={{ mt: "45px" }}
+                id="menu-appbar"
+                anchorEl={anchorElUser}
+                anchorOrigin={{
+                  vertical: "top",
+                  horizontal: "right",
                 }}
-              >
-              Hi, {username}
-              </Typography>
-              <Button
-                color="inherit"
-                startIcon={<LogoutIcon />}
-                onClick={onLogout}
-                sx={{
-                  backgroundColor: "#e0e0e0", // Light grey button background
-                  borderRadius: "25px",
-                  paddingX: "15px",
-                  fontSize: "1.1rem",
-                  "&:hover": {
-                    backgroundColor: "#d0d0d0", // Slightly darker grey on hover
-                  },
+                keepMounted
+                transformOrigin={{
+                  vertical: "top",
+                  horizontal: "right",
                 }}
+                open={Boolean(anchorElUser)}
+                onClose={handleCloseUserMenu}
               >
-                Logout
-              </Button>
+                {/* Admin-Specific Menu Items */}
+                {role === "admin" && (
+                  <>
+                    <MenuItem
+                      onClick={() => {
+                        navigate(ROUTES.ADMIN_DASHBOARD);
+                        handleCloseUserMenu();
+                      }}
+                      sx={{
+                        "&:hover": {
+                          backgroundColor: "#E87722",
+                          color: "#FFFFFF",
+                        },
+                      }}
+                    >
+                      Admin Dashboard
+                    </MenuItem>
+                    <MenuItem
+                      onClick={() => {
+                        navigate(ROUTES.ANALYTICS);
+                        handleCloseUserMenu();
+                      }}
+                      sx={{
+                        "&:hover": {
+                          backgroundColor: "#E87722",
+                          color: "#FFFFFF",
+                        },
+                      }}
+                    >
+                      Analytics
+                    </MenuItem>
+                  </>
+                )}
+
+                {/* User-Specific Menu Item */}
+                {role === "user" && (
+                  <MenuItem
+                    onClick={() => {
+                      navigate(ROUTES.USER_DASHBOARD);
+                      handleCloseUserMenu();
+                    }}
+                    sx={{
+                      "&:hover": {
+                        backgroundColor: "#E87722",
+                        color: "#FFFFFF",
+                      },
+                    }}
+                  >
+                    User Dashboard
+                  </MenuItem>
+                )}
+
+                {/* Logout Option */}
+                <MenuItem
+                  onClick={handleLogout}
+                  sx={{
+                    "&:hover": {
+                      backgroundColor: "#E87722",
+                      color: "#FFFFFF",
+                    },
+                  }}
+                >
+                  Logout
+                </MenuItem>
+              </Menu>
             </Box>
-          </Box>
-
-          {/* Mobile Menu Button */}
-          <IconButton
-            edge="start"
-            color="inherit"
-            aria-label="menu"
-            onClick={handleDrawerToggle}
-            sx={{ display: { sm: "none" }, color: "#333" }}
-          >
-            <MenuIcon />
-          </IconButton>
+          ) : (
+            // Show Login Option for Non-Authenticated Users
+            <Typography
+              variant="body1"
+              component="a"
+              href={ROUTES.LOGIN}
+              sx={{
+                color: "#FFFFFF",
+                textDecoration: "none",
+                "&:hover": {
+                  textDecoration: "underline",
+                },
+              }}
+            >
+              Login
+            </Typography>
+          )}
         </Toolbar>
-      </AppBar>
-
-      {/* Drawer for Mobile */}
-      <Drawer
-        anchor="left"
-        open={mobileOpen}
-        onClose={handleDrawerToggle}
-        sx={{
-          display: { xs: "block", sm: "none" },
-          "& .MuiDrawer-paper": {
-            backgroundColor: "#f5f5f5", // Matching light gray background for drawer
-            color: "#333", // Dark text for contrast
-            width: 240,
-            paddingTop: 2,
-            borderRadius: "10px",
-          },
-        }}
-      >
-        {drawer}
-      </Drawer>
-    </>
+      </Container>
+    </AppBar>
   );
 }
 

@@ -1,61 +1,75 @@
-import React, { useEffect, useState } from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+// src/App.js
+import React from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { useSelector } from "react-redux";
 import Navbar from "./components/Navbar";
-import Register from "./components/Register";
-import Login from "./components/Login";
-import UserDashboard from "./components/UserDashboard";
-import AdminDashboard from "./components/AdminDashboard";
+import Register from "./components/Auth/Register";
+import Login from "./components/Auth/Login";
+import AdminUserDashboard from "./components/AdminUserDashboard";
+import Analytics from "./components/Dashboard/Analytics";
+import DocumentDetails from "./components/Documents/DocumentDetails";
+import ProtectedRoute from "./routes/ProtectedRoute";
+import { ROUTES } from "./constants/routes";
 
 function App() {
-  const [username, setUsername] = useState("");
-  const [role, setRole] = useState("");
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-
-  // Check for token on app load
-  useEffect(() => {
-    const token = sessionStorage.getItem("token");
-    if (token) {
-      // Optionally, decode the token to extract username and role
-      const storedUsername = sessionStorage.getItem("username");
-      const storedRole = sessionStorage.getItem("role");
-      setUsername(storedUsername || "");
-      setRole(storedRole || "");
-      setIsAuthenticated(true);
-    }
-  }, []);
-
-  const handleLogin = (user, userRole) => {
-    setUsername(user);
-    setRole(userRole);
-    setIsAuthenticated(true);
-  };
-
-  const handleLogout = () => {
-    sessionStorage.removeItem("token");
-    sessionStorage.removeItem("username");
-    sessionStorage.removeItem("role");
-    setUsername("");
-    setRole("");
-    setIsAuthenticated(false);
-  };
+  const { isAuthenticated, role } = useSelector((state) => state.auth);
 
   return (
     <Router>
-      {isAuthenticated && <Navbar username={username} onLogout={handleLogout} />}
+      <Navbar />
       <Routes>
-        {!isAuthenticated ? (
-          <>
-            <Route path="/register" element={<Register />} />
-            <Route path="/login" element={<Login onLogin={handleLogin} />} />
-            <Route path="*" element={<Navigate to="/login" />} />
-          </>
-        ) : (
-          <>
-            {role === "admin" && <Route path="/admin" element={<AdminDashboard />} />}
-            {role === "user" && <Route path="/user" element={<UserDashboard />} />}
-            <Route path="*" element={<Navigate to={role === "admin" ? "/admin" : "/user"} />} />
-          </>
-        )}
+        {/* Public Routes */}
+        <Route path={ROUTES.REGISTER} element={<Register />} />
+        <Route path={ROUTES.LOGIN} element={<Login />} />
+
+        {/* Protected Routes */}
+        <Route
+          path={ROUTES.ADMIN_DASHBOARD}
+          element={
+            <ProtectedRoute
+              isAuthenticated={isAuthenticated}
+              role={role}
+              requiredRole="admin"
+              redirectTo={ROUTES.USER_DASHBOARD}
+            >
+              <AdminUserDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={ROUTES.ANALYTICS}
+          element={
+            <ProtectedRoute
+              isAuthenticated={isAuthenticated}
+              role={role}
+              requiredRole="admin"
+              redirectTo={ROUTES.ADMIN_DASHBOARD}
+            >
+              <Analytics />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={ROUTES.DOCUMENT_DETAILS}
+          element={
+            <ProtectedRoute isAuthenticated={isAuthenticated}>
+              <DocumentDetails />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path={ROUTES.USER_DASHBOARD}
+          element={
+            <ProtectedRoute
+              isAuthenticated={isAuthenticated}
+              role={role}
+              requiredRole="user"
+              redirectTo={ROUTES.ADMIN_DASHBOARD}
+            >
+              <AdminUserDashboard />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
     </Router>
   );
