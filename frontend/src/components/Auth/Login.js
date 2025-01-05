@@ -37,7 +37,7 @@ const Login = () => {
     try {
       const params = new URLSearchParams(formData);
       const response = await axios.post(
-        "http://0.0.0.0:8000/auth/login",
+        `${process.env.REACT_APP_API_BASE_URL}auth/login`,
         params
       );
       const { access_token, role } = response.data;
