@@ -8,7 +8,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 # MongoDB connection string (replace with your own)
-mongo_client = pymongo.MongoClient("mongodb+srv://rajnshah:rajshah@cluster0.jsbcp.mongodb.net/?retryWrites=true&w=majority")
+mongo_client = pymongo.MongoClient("")
 db = mongo_client["learning_library"]
 collection = db["notes"]
 
